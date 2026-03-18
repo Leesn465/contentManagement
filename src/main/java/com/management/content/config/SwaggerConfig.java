@@ -20,12 +20,22 @@ import org.springframework.context.annotation.Configuration;
 public class SwaggerConfig {
 
     @Bean
-    public GroupedOpenApi chatOpenApi() {
-        String[] paths = {"/api/**"};
+    public OpenAPI openAPI() {
+        String jwtSchemeName = "BearerAuth";
 
-        return GroupedOpenApi.builder()
-                .group("코드 기록사의 Swagger-v1")
-                .pathsToMatch(paths)
-                .build();
+        SecurityRequirement securityRequirement = new SecurityRequirement()
+                .addList(jwtSchemeName);
+
+        Components components = new Components()
+                .addSecuritySchemes(jwtSchemeName,
+                        new SecurityScheme()
+                                .name("Authorization")
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT"));
+
+        return new OpenAPI()
+                .addSecurityItem(securityRequirement)
+                .components(components);
     }
 }

@@ -9,7 +9,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -108,4 +111,18 @@ public class GlobalExceptionHandler {
         );
         return org.springframework.http.ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
+    @ExceptionHandler(ForbiddenException.class)
+    public org.springframework.http.ResponseEntity<ErrorResponse> handleForbidden(
+            ForbiddenException e,
+            HttpServletRequest request
+    ) {
+        ErrorResponse response = ErrorResponse.of(
+                HttpStatus.FORBIDDEN.value(),
+                "FORBIDDEN",
+                e.getMessage(),
+                request.getRequestURI()
+        );
+        return org.springframework.http.ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
 }

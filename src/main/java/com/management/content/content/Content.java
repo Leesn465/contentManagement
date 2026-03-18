@@ -10,7 +10,7 @@ import com.management.content.user.User;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = " contents")
+@Table(name = "contents")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Content {
