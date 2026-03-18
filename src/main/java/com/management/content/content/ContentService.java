@@ -1,22 +1,18 @@
 package com.management.content.content;
 
 import com.management.content.auth.PrincipalDetails;
-import com.management.content.auth.PrincipalUserDetailsService;
 import com.management.content.common.exception.ForbiddenException;
 import com.management.content.common.exception.ResourceNotFoundException;
-import com.management.content.content.DTO.ContentCreateRequest;
-import com.management.content.content.DTO.ContentResponse;
-import com.management.content.content.DTO.ContentUpdateRequest;
-import com.management.content.content.DTO.PageResponse;
+import com.management.content.content.DTO.*;
 import com.management.content.user.Role;
 import com.management.content.user.User;
 import com.management.content.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -73,24 +69,43 @@ public class ContentService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<ContentResponse> getList(int page, int size) {
+    public CursorPageResponse<ContentResponse> getListWithCursor(ContentCursorRequest request) {
+        int size = request.size();
 
-        if (page < 0) {
-            throw new IllegalArgumentException("page는 0 이상이어야 합니다.");
-        }
         if (size < 1 || size > 100) {
             throw new IllegalArgumentException("size는 1 이상 100 이하여야 합니다.");
         }
-        Pageable pageable = PageRequest.of(page, size);
 
-        Page<Content> contentPage =
-                contentRepository.findAllByOrderByCreatedDateDesc(pageable);
+        PageRequest pageable = PageRequest.of(0, size + 1);
 
-        Page<ContentResponse> mapped =
-                contentPage.map(ContentResponse::from);
+        List<Content> contents;
+        if (request.lastCreatedDate() == null && request.lastId() == null) {
+            contents = contentRepository.findFirstPage(pageable);
+        } else {
+            contents = contentRepository.findNextPage(
+                    request.lastCreatedDate(),
+                    request.lastId(),
+                    pageable
+            );
+        }
 
-        return PageResponse.from(mapped);
+        boolean hasNext = contents.size() > size;
+        List<Content> result = hasNext ? contents.subList(0, size) : contents;
+
+        List<ContentResponse> responseList =
+                result.stream().map(ContentResponse::from).toList();
+
+        Content lastContent = result.isEmpty() ? null : result.getLast();
+
+        return new CursorPageResponse<>(
+                responseList,
+                size,
+                hasNext,
+                lastContent != null ? lastContent.getCreatedDate() : null,
+                lastContent != null ? lastContent.getId() : null
+        );
     }
+
 
 
 
