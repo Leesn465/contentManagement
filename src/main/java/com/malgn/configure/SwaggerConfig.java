@@ -9,6 +9,12 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+
+/**
+ * Swagger(OpenAPI) 설정
+ * - API 문서 정보 정의
+ * - JWT Bearer 인증 방식을 Swagger UI에 반영
+ */
 @OpenAPIDefinition(
         info = @Info(title = "코드 기록사의 API 명세서",
                 description = "백엔드 API 서버",
@@ -19,7 +25,7 @@ public class SwaggerConfig {
 
     @Bean
     public OpenAPI openAPI() {
-        String jwtSchemeName = "BearerAuth";
+        String jwtSchemeName = "bearerAuth";
 
         SecurityRequirement securityRequirement = new SecurityRequirement()
                 .addList(jwtSchemeName);

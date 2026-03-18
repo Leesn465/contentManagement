@@ -10,6 +10,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+
+/**
+ * 사용자 관련 API
+ * - 인증된 사용자 정보 조회 기능 제공
+ */
 @Tag(name = "Auth", description = "회원가입 및 로그인 API")
 @RestController
 @RequestMapping("/api/users")

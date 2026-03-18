@@ -14,6 +14,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+
+/**
+ * 콘텐츠 서비스
+ * - 콘텐츠 생성, 조회, 수정, 삭제 등 핵심 비즈니스 로직 처리
+ * - 권한 검증 및 커서 기반 페이징 처리 포함
+ */
 @Service
 @RequiredArgsConstructor
 public class ContentService {
@@ -21,6 +27,10 @@ public class ContentService {
     private final ContentRepository contentRepository;
     private final UserRepository userRepository;
 
+    /**
+     * 콘텐츠 생성
+     * - 로그인 사용자 정보를 기반으로 작성자 설정
+     */
     @Transactional
     public ContentResponse create(ContentCreateRequest request, PrincipalDetails userDetails) {
         User author = userRepository.findById(userDetails.getId())
@@ -35,6 +45,11 @@ public class ContentService {
         return ContentResponse.from(savedContent);
 
     }
+
+    /**
+     * 콘텐츠 수정
+     * - 작성자 또는 ADMIN 권한만 수정 가능
+     */
     @Transactional
     public ContentResponse update(Long id, ContentUpdateRequest request, PrincipalDetails userDetails) {
         Content content = contentRepository.findById(id)
@@ -50,6 +65,11 @@ public class ContentService {
         return ContentResponse.from(content);
 
     }
+
+    /**
+     * 콘텐츠 삭제
+     * - 작성자 또는 ADMIN 권한만 삭제 가능
+     */
     @Transactional
     public void delete(Long id, PrincipalDetails userDetails) {
         Content content = contentRepository.findById(id)
@@ -60,6 +80,10 @@ public class ContentService {
         contentRepository.delete(content);
     }
 
+    /**
+     * 콘텐츠 상세 조회
+     * - 조회 시 viewCount 증가 처리
+     */
     @Transactional
     public ContentResponse getDetail(Long id){
         contentRepository.increaseViewCount(id);
@@ -72,6 +96,13 @@ public class ContentService {
                 .orElseThrow(() -> new ResourceNotFoundException("콘텐츠를 찾을 수 없습니다."));
         return ContentResponse.from(content);
     }
+
+
+    /**
+     * 커서 기반 콘텐츠 목록 조회
+     * - size + 1 조회를 통해 다음 페이지 존재 여부 판단
+     * - (createdDate, id)를 커서로 사용하여 안정적인 페이징 보장
+     */
     @Transactional(readOnly = true)
     public CursorPageResponse<ContentResponse> getListWithCursor(ContentCursorRequest request) {
         int size = request.size();
@@ -111,8 +142,10 @@ public class ContentService {
     }
 
 
-
-
+    /**
+     * 권한 검증
+     * - 작성자 본인 또는 ADMIN 권한만 허용
+     */
     private void validateCheck(Content content, PrincipalDetails userDetails) {
         boolean isOwner = content.getAuthor().getId().equals(userDetails.getId());
         boolean isAdmin = userDetails.getRole() == Role.ADMIN;

@@ -17,6 +17,12 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Map;
 
+
+/**
+ * JWT 인증 필터 (로그인 처리)
+ * - /api/auth/login 요청을 가로채어 인증 수행
+ * - 인증 성공 시 JWT 토큰 생성 및 응답 반환
+ */
 @RequiredArgsConstructor
 @NullMarked
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
@@ -25,6 +31,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     private final JwtTokenProvider jwtTokenProvider;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+
+    /**
+     * 로그인 요청 처리
+     * - JSON body에서 username/password 추출
+     * - AuthenticationManager를 통해 인증 수행
+     */
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
@@ -43,6 +55,11 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         }
     }
 
+    /**
+     * 인증 성공 시 JWT 토큰 생성
+     * - 사용자 정보를 기반으로 accessToken 생성
+     * - Authorization 헤더 및 응답 body에 토큰 포함
+     */
     @Override
     protected void successfulAuthentication(HttpServletRequest request,
                                             HttpServletResponse response,

@@ -9,6 +9,12 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * 콘텐츠 엔티티
+ * - 사용자(User)와 다대일 관계를 가지는 도메인
+ * - 생성/수정 정보(createdDate, createdBy 등)를 통해 감사(Audit) 기능을 단순 구현
+ * - 최신순 조회(created_date desc, id desc)에 최적화된 인덱스를 기반으로 설계
+ */
 @Entity
 @Table(name = "contents")
 @Getter
@@ -63,6 +69,11 @@ public class Content {
         this.author = author;
     }
 
+    /**
+     * 콘텐츠 생성 팩토리 메서드
+     * - 생성 시점의 시간과 작성자 정보를 자동으로 세팅
+     * - viewCount는 기본값 0으로 초기화
+     */
     public static Content create(String title, String description, User author) {
         LocalDateTime now = LocalDateTime.now();
 
@@ -78,6 +89,10 @@ public class Content {
                 .build();
     }
 
+    /**
+     * 콘텐츠 수정
+     * - 수정 시점과 수정자를 함께 기록
+     */
     public void update(String title, String description, String modifier) {
         this.title = title;
         this.description = description;
@@ -85,6 +100,10 @@ public class Content {
         this.lastModifiedBy = modifier;
     }
 
+    /**
+     * 조회수 증가
+     * - 단순 증가 로직 (동시성 제어는 DB update 쿼리로 처리)
+     */
     public void increaseViewCount() {
         this.viewCount++;
     }
