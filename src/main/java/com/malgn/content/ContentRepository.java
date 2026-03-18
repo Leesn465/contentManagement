@@ -14,12 +14,14 @@ public interface ContentRepository extends JpaRepository<Content,Long> {
     // Page<Content> findAllByOrderByCreatedDateDesc(Pageable pageable);
     @Query("""
     SELECT c FROM Content c
+    JOIN FETCH c.author
     ORDER BY c.createdDate DESC, c.id DESC
 """)
     List<Content> findFirstPage(Pageable pageable);
 
     @Query("""
     SELECT c FROM Content c
+    JOIN FETCH c.author
     WHERE (c.createdDate < :lastCreatedDate)
        OR (c.createdDate = :lastCreatedDate AND c.id < :lastId)
     ORDER BY c.createdDate DESC, c.id DESC
@@ -29,4 +31,5 @@ public interface ContentRepository extends JpaRepository<Content,Long> {
             @Param("lastId") Long lastId,
             Pageable pageable
     );
+
 }
