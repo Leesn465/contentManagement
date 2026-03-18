@@ -55,8 +55,7 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/h2-console/**"
                         ).permitAll()
-                        .requestMatchers("/api/users/me").authenticated()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/contents/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
