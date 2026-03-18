@@ -2,6 +2,7 @@ package com.management.content.user;
 
 import com.management.content.auth.DTO.SignUpRequest;
 import com.management.content.auth.DTO.SignupResponse;
+import com.management.content.common.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,8 +19,8 @@ public class UserService {
 
     @Transactional
     public SignupResponse signUp(SignUpRequest request) {
-        if(userRepository.existsByUsername(request.username())){
-            throw new IllegalArgumentException("이미 존재하는 ID입니다");
+        if (userRepository.existsByUsername(request.username())) {
+            throw new BadRequestException("이미 존재하는 username입니다.");
         }
 
         User user = User.builder()
