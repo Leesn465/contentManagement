@@ -62,12 +62,16 @@ public class ContentService {
 
     @Transactional
     public ContentResponse getDetail(Long id){
-        Content content = contentRepository.findById(id)
-                .orElseThrow(() ->new ResourceNotFoundException("콘텐츠를 찾을 수 없습니다."));
-        content.increaseViewCount();
-        return ContentResponse.from(content);
+        contentRepository.increaseViewCount(id);
+        return getDetailWithoutIncrease(id);
     }
 
+    @Transactional(readOnly = true)
+    public ContentResponse getDetailWithoutIncrease(Long id){
+        Content content = contentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("콘텐츠를 찾을 수 없습니다."));
+        return ContentResponse.from(content);
+    }
     @Transactional(readOnly = true)
     public CursorPageResponse<ContentResponse> getListWithCursor(ContentCursorRequest request) {
         int size = request.size();
