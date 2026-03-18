@@ -1,91 +1,220 @@
-# 2026 신입 Back-End 개발자 코딩 과제 - 간단한 CMS REST API
+# contentManagement
+# 1. 프로젝트 소개
 
-2026년도 신입 Back-End 개발자 코딩 과제입니다.
-간단한 CMS(Contents Management System) REST API 를 구현하는 것이 목표입니다.
+Spring Boot 기반으로 구현한 간단한 CMS(Content Management System) REST API 프로젝트입니다.
 
-외부 자료 검색 및 AI 도구 사용을 허용합니다. 다만, 제출물에 활용한 도구와 방식을 간단하게 명시해주시기 바랍니다.
+현재까지 구현한 범위는 다음과 같습니다.
 
-## Spec
+- 회원가입
+- 로그인
+- JWT 기반 인증
+- Spring Security 설정
+- 비밀번호 BCrypt 암호화 저장
+- 사용자 권한(Role) 관리 구조
+
+---
+
+# 2. 기술 스택
 
 - Java 25
 - Spring Boot 4
 - Spring Security
-- JPA
-- H2 (db)
-- Lombok (필요시)
+- Spring Data JPA
+- H2 Database
+- Lombok
+- JWT
 
-## 과제 목표
+---
 
-- 간단한 CMS 콘텐츠 관리 API 를 구현 해주세요.
-- DB Schema 모두 구현해주세요.
-- DB 는 h2 를 사용해주세요.
-- 가능한 예외처리도 구현해주세요.
-- 필요하다고 생각되는 부분은 추가로 구현해도 됩니다.
+# 3. 실행 방법
 
-## 데이터 모델
-
-### Contents
-
-| 컬럼명                | 이름  | 설명          | 데이터 타입                      | 비고 |
-|--------------------|-----|-------------|-----------------------------|----|
-| id                 | 아이디 | 고유 아이디      | bigint primary key not null |    |
-| title              | 제목  | contents 제목 | varchar(100) not null       |    |
-| description        | 내용  | contents 내용 | text                        |    |
-| view_count         | 조회수 | 조회수         | bigint not null             |    |
-| created_date       | 생성일 | 생성한 날짜      | timestamp                   |    |
-| created_by         | 생성자 | 생성한 사용자     | varchar(50) not null        |    |
-| last_modified_date | 수정일 | 마지막 수정일     | timestamp                   |    |
-| last_modified_by   | 수정자 | 마지막 수정한 사용자 | varchar(50)                 |    |
-
-## 구현 기능
-
-### 콘텐츠 관련 CRUD
-
-시스템에 등록된 콘텐츠에 대한 CRUD 를 필수로 구현해주세요.
-
-#### 기능
-- 콘텐츠 추가
-- 콘텐츠 목록 조회
-  - 반드시 페이징 처리를 해주세요.
-- 콘텐츠 상세 조회
-- 콘텐츠 수정
-- 콘텐츠 삭제
+프로젝트 실행
 
 
-### 로그인
-- Spring Security 를 이용해서 로그인을 필수로 구현해주세요.
-- 로그인 방식은 자유롭게 선택하여 구현하되, `README.md` 에 명시해주세요
+
+bash
+./gradlew bootRun
+# 또는 IDE에서 메인 애플리케이션 실행
+
+
+
+
+H2 Console
+
+- URL: http://localhost:8080/h2-console
+- JDBC URL: `jdbc:h2:mem:testdb`
+- Username: `admin`
+- Password: `0000`
+
+# 4. 현재 구현 내용
+
+## 4-1. 회원가입
+
+`POST /api/auth/signup`
+
+- `username`, `password`를 받아 사용자 생성
+- 비밀번호는 `PasswordEncoder`(BCrypt)로 암호화 후 저장
+- 회원가입 시 기본 권한은 `USER`
+
+## 4-2. 로그인
+
+`POST /api/auth/login`
+
+- `username`, `password` 기반 로그인
+- 로그인 성공 시 JWT Access Token 발급
+
+## 4-3. 인증 방식
+
+- JWT 기반 인증 방식 사용
+- 인증이 필요한 요청은 `Authorization: Bearer {token}` 헤더 사용
+- JWT 필터를 통해 토큰 검증 후 인증 정보 설정
+
+## 4-4. 권한 구조
+
+- `ADMIN`
+- `USER`
+
+현재 권한은 enum 기반 단일 컬럼으로 관리하도록 설계했습니다.
+
+# 5. API 명세
+
+## 회원가입
+
+`POST /api/auth/signup`
+
+**Request**
+
+
+
+json
+{
+"username": "user1",
+"password": "user1234"
+}
+
+
+
+
+**Response**
+
+
+
+json
+{
+"id": 1,
+"username": "user1",
+"role": "USER"
+}
+
+
+
+
+## 로그인
+
+`POST /api/auth/login`
+
+**Request**
+
+
+
+json
+{
+"username": "user1",
+"password": "user1234"
+}
+
+
+
+
+**Response**
+
+
+
+json
+{
+"accessToken": "eyJ...",
+"tokenType": "Bearer"
+}
+
+
+
+
+# 6. 데이터베이스 설계
+
+**users**
+
+| 컬럼명             | 타입          | 제약조건       | 설명                                  |
+| ------------------ | ------------- | ------------- | ------------------------------------- |
+| id                 | bigint        | PK            | 사용자 ID                               |
+| username           | varchar(50)   | not null, unique | 로그인 아이디                             |
+| password           | varchar(255)  | not null      | 암호화된 비밀번호                           |
+| role               | varchar(20)   | not null      | USER / ADMIN                            |
+| created_date       | timestamp     | not null      | 생성일시                                |
+| last_modified_date | timestamp     |               | 수정일시                                |
+
+# 7. 설계 의도
+
+## 비밀번호 암호화
+
+사용자 비밀번호는 평문으로 저장하지 않고 `BCryptPasswordEncoder`를 사용해 암호화하여 저장했습니다.
+
+## 인증 방식
+
+REST API 과제 특성에 맞게 JWT 기반 인증 방식을 선택했습니다. 세션 기반 인증보다 테스트와 확장이 용이하다고 판단했습니다.
+
+## 권한 관리
+
+현재 과제 요구사항의 권한은 ADMIN, USER 두 가지로 명확하므로, 별도 Role 테이블 대신 enum 기반 단일 컬럼으로 단순하게 설계했습니다.
+
+# 8. 패키지 구조
+
+예시 기준:
+
+
+
+
+com.management.content
+├── auth
+│ ├── controller
+│ ├── dto
+│ ├── jwt
+│ └── service
+├── user
+│ ├── entity
+│ ├── repository
+│ └── service
+├── common
+└── config
+
+
+
+
+# 9. 현재까지 구현한 주요 클래스
+
+- User
 - Role
-    - 관리자(ADMIN)
-    - 사용자(USER)
+- UserRepository
+- AuthController
+- AuthService
+- CustomUserDetails
+- CustomUserDetailsService
+- JwtConstants
+- JwtTokenProvider
+- JwtAuthenticationFilter
+- JwtAuthorizationFilter
+- SecurityConfig
+- EncoderConfig
 
-### 접근 권한
+# 10. 사용한 AI 도구 및 참고 자료
 
-- 접근 권한을 필수로 구현해주세요.
-- 콘텐츠 생성자 본인만 수정 + 삭제 가능하게 구현해주세요.
-- 단, 관리자(ADMIN) 인 경우 모든 콘텐츠에 대해 수정 + 삭제할 수 있게 구현해주세요.
+## AI 도구
 
-## 제출
+- ChatGPT
 
-### 기한
+## 활용 방식
 
-- 본 메일 수신 후 26.03.09(월) 오후 3시까지 (주)맑은기술 채용 메일(recruit@malgn.com) 로 보내주시기 바랍니다. 
+- Spring Security / JWT 구조 정리
+- 회원가입 / 로그인 구현 흐름 점검
+- README 작성 구조 정리
 
-### 제출물
-
-- 소스코드 (Zip 또는 Github repository 링크)
-- README.md
-    - 추가 내용이나 제출물 관련 내용을 추가헤주세요.
-    - 사용한 AI 또는 참고 자료가 있다면 간단히 명시
-- REST API Docs
-    - 자유롭게 작성해서 첨부해주세요.
-
-
-
-
-
-
-
-
-
-
+최종 구현과 코드 검증은 직접 수행했습니다.
