@@ -1,6 +1,7 @@
 package com.malgn.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -126,6 +127,7 @@ public class GlobalExceptionHandler {
         );
         return org.springframework.http.ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
+
     @ExceptionHandler(ForbiddenException.class)
     public org.springframework.http.ResponseEntity<ErrorResponse> handleForbidden(
             ForbiddenException e,
@@ -139,5 +141,20 @@ public class GlobalExceptionHandler {
         );
         return org.springframework.http.ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public org.springframework.http.ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+            DataIntegrityViolationException e,
+            HttpServletRequest request
+    ) {
+        ErrorResponse response = ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "BAD_REQUEST",
+                "중복되거나 유효하지 않은 데이터입니다.",
+                request.getRequestURI()
+        );
+        return org.springframework.http.ResponseEntity.badRequest().body(response);
+    }
+
 
 }
