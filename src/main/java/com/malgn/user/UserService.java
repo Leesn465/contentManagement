@@ -5,6 +5,7 @@ import com.malgn.auth.DTO.SignUpRequest;
 import com.malgn.auth.DTO.SignupResponse;
 import com.malgn.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,21 +35,25 @@ public class UserService {
             throw new BadRequestException("이미 존재하는 username입니다.");
         }
 
-        User user = User.builder()
-                .username(request.username())
-                .password(passwordEncoder.encode(request.password()))
-                .role(Role.USER)
-                .createdDate(LocalDateTime.now())
-                .lastModifiedDate(LocalDateTime.now())
-                .build();
+        try {
+            User user = User.builder()
+                    .username(request.username())
+                    .password(passwordEncoder.encode(request.password()))
+                    .role(Role.USER)
+                    .createdDate(LocalDateTime.now())
+                    .lastModifiedDate(LocalDateTime.now())
+                    .build();
 
-        User saveComplete = userRepository.save(user);
-        return new SignupResponse(
-                saveComplete.getId(),
-                saveComplete.getUsername(),
-                saveComplete.getRole().name()
-        );
+            User saveComplete = userRepository.saveAndFlush(user);
+
+            return new SignupResponse(
+                    saveComplete.getId(),
+                    saveComplete.getUsername(),
+                    saveComplete.getRole().name()
+            );
+        } catch (DataIntegrityViolationException e) {
+            throw new BadRequestException("이미 존재하는 username입니다.");
+        }
     }
-
 
 }

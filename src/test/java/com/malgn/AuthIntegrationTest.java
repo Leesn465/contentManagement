@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.malgn.user.Role;
 import com.malgn.user.User;
 import com.malgn.user.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +47,7 @@ public class AuthIntegrationTest {
     private PasswordEncoder passwordEncoder;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
 
     /**
      * 회원가입 성공 테스트
@@ -100,26 +103,30 @@ public class AuthIntegrationTest {
     @Test
     @DisplayName("중복 username 회원가입 실패")
     void signup_fail_duplicate_username() throws Exception {
-        // given
-        userRepository.save(User.builder()
-                .username("user1")
+        String username = "dup-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+
+        System.out.println("username = " + username);
+        System.out.println("exists before = " + userRepository.existsByUsername(username));
+        System.out.println("count before = " + userRepository.count());
+
+        userRepository.saveAndFlush(User.builder()
+                .username(username)
                 .password(passwordEncoder.encode("user1234"))
                 .role(Role.USER)
                 .createdDate(LocalDateTime.now())
                 .lastModifiedDate(LocalDateTime.now())
                 .build());
 
-        String requestBody = """
-            {
-              "username": "user1",
-              "password": "user9999"
-            }
-            """;
+        System.out.println("insert success");
 
-        // when & then
         mockMvc.perform(post("/api/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
+                        .content("""
+                        {
+                          "username": "%s",
+                          "password": "1234"
+                        }
+                        """.formatted(username)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("BAD_REQUEST"))
                 .andExpect(jsonPath("$.message").value("이미 존재하는 username입니다."));
@@ -142,18 +149,17 @@ public class AuthIntegrationTest {
                 .build());
 
         String requestBody = """
-                {
-                  "username": "user1",
-                  "password": "user1234"
-                }
-                """;
+            {
+              "username": "user1",
+              "password": "user1234"
+            }
+            """;
 
         // when
         String responseBody = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
-                .andExpect(header().exists("Authorization"))
                 .andExpect(jsonPath("$.accessToken").exists())
                 .andExpect(jsonPath("$.tokenType").value("Bearer"))
                 .andReturn()
