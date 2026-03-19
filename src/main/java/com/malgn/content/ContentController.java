@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
+
+/**
+ * 콘텐츠 관리 API
+ * - 생성, 조회, 수정, 삭제 및 목록 조회 기능 제공
+ */
 @Tag(name = "Content", description = "콘텐츠 관리 API")
 @RestController
 @RequestMapping("/api/contents")

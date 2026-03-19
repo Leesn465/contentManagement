@@ -10,6 +10,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 인증 관련 API
+ * - 회원가입 및 로그인 요청 처리
+ * - 로그인은 Spring Security Filter에서 실제 인증 로직 수행
+ */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor

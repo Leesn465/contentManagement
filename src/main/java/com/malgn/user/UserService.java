@@ -11,6 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+/**
+ * 사용자 서비스
+ * - 회원가입 및 사용자 관련 비즈니스 로직을 처리한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -18,6 +22,12 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
+    /**
+     * 회원가입
+     * - username 중복 검증
+     * - 비밀번호 암호화(BCrypt) 후 저장
+     * - 기본 권한(USER) 부여
+     */
     @Transactional
     public SignupResponse signUp(SignUpRequest request) {
         if (userRepository.existsByUsername(request.username())) {

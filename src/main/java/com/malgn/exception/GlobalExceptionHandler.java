@@ -11,6 +11,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/**
+ * 전역 예외 처리 핸들러
+ * - 애플리케이션 전반에서 발생하는 예외를 공통 포맷으로 응답
+ * - HTTP 상태 코드와 메시지를 일관되게 관리
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -42,6 +47,10 @@ public class GlobalExceptionHandler {
         return org.springframework.http.ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    /**
+     * 유효성 검증 실패 처리
+     * - @Valid 검증 실패 시 첫 번째 에러 메시지 반환
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public org.springframework.http.ResponseEntity<ErrorResponse> handleValidation(
             MethodArgumentNotValidException e,
@@ -77,6 +86,11 @@ public class GlobalExceptionHandler {
         return org.springframework.http.ResponseEntity.badRequest().body(response);
     }
 
+    /**
+     * 인증 실패 처리
+     * - 로그인 실패 또는 사용자 조회 실패 시 동일 메시지 반환
+     * - 보안상 구체적인 원인을 노출하지 않음
+     */
     @ExceptionHandler({
             BadCredentialsException.class,
             UsernameNotFoundException.class,
@@ -95,6 +109,10 @@ public class GlobalExceptionHandler {
         return org.springframework.http.ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
+    /**
+     * 기타 예외 처리
+     * - 예상하지 못한 서버 오류 처리
+     */
     @ExceptionHandler(Exception.class)
     public org.springframework.http.ResponseEntity<ErrorResponse> handleException(
             Exception e,

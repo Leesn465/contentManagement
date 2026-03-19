@@ -13,9 +13,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 
+/**
+ * 초기 데이터 설정
+ * - 애플리케이션 실행 시 관리자 계정 및 테스트 데이터 생성
+ * - 대량 데이터(3000건)를 생성하여 페이징 및 성능 테스트 지원
+ */
 @Configuration
 public class DataInitializer {
 
+    /**
+     * 테스트 데이터 초기화
+     * - admin 계정이 없으면 생성
+     * - 콘텐츠 데이터가 없을 경우 대량 데이터 생성
+     */
     @Bean
     CommandLineRunner initData(
             UserRepository userRepository,
