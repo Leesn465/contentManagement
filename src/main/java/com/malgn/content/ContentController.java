@@ -90,7 +90,23 @@ public class ContentController {
     }
 
 
-    @Operation(summary = "콘텐츠 목록 조회 (Cursor 기반)")
+    @Operation(
+            summary = "콘텐츠 목록 조회 (Cursor 기반)",
+            description = """
+            커서 기반(Seek) 페이징을 사용한 콘텐츠 목록 조회 API입니다.
+
+            - 최초 요청: lastCreatedDate, lastId 없이 호출
+            - 이후 요청: 이전 응답의 커서를 사용
+
+            요청 예시:
+            GET /api/contents?lastCreatedDate=2026-03-20T10:00:00&lastId=10&size=10
+
+            파라미터:
+            - lastCreatedDate (optional): 마지막 콘텐츠 생성 시간
+            - lastId (optional): 마지막 콘텐츠 ID
+            - size: 조회 개수 (기본 10, 최대 100)
+            """
+    )
     @GetMapping
     public CursorPageResponse<ContentResponse> getList(
             @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
