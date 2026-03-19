@@ -196,6 +196,138 @@ class ContentIntegrationTest {
     }
 
     /**
+     * 콘텐츠 잠금 성공
+     * - ADMIN 사용자는 특정 콘텐츠를 잠글 수 있다
+     * - 잠금 후 상세 조회 시 locked=true 를 반환해야 한다
+     */
+    @Test
+    @DisplayName("관리자는 콘텐츠를 잠글 수 있다")
+    void lock_success_by_admin() throws Exception {
+        // given
+        mockMvc.perform(post("/api/auth/signup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new SignUpRequest("user1", "1234"))));
+
+        String userToken = getToken("user1", "1234");
+        String adminToken = getToken("admin", "admin1234");
+
+        var createResult = mockMvc.perform(post("/api/contents")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                        {
+                            "title": "잠금 테스트 제목",
+                            "description": "잠금 테스트 내용"
+                        }
+                        """))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Long contentId = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .get("id").asLong();
+
+        // when + then
+        mockMvc.perform(patch("/api/contents/" + contentId + "/lock")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/contents/" + contentId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.locked").value(true));
+    }
+
+    /**
+     * 콘텐츠 잠금 권한 검증 테스트
+     * - 관리자(ADMIN)가 아닌 일반 사용자는 콘텐츠를 잠글 수 없다
+     * - 작성자가 아닌 다른 사용자(user2)가 잠금 요청 시도
+     * - 서비스의 validateAdmin() 로직에 의해 Forbidden(403) 예외가 발생해야 한다
+     */
+    @Test
+    @DisplayName("관리자가 아닌 사용자는 콘텐츠를 잠글 수 없다")
+    void lock_fail_by_non_admin() throws Exception {
+        // given
+        mockMvc.perform(post("/api/auth/signup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new SignUpRequest("user1", "1234"))));
+
+        mockMvc.perform(post("/api/auth/signup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new SignUpRequest("user2", "1234"))));
+
+        String ownerToken = getToken("user1", "1234");
+        String otherUserToken = getToken("user2", "1234");
+
+        var createResult = mockMvc.perform(post("/api/contents")
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                        {
+                            "title": "제목",
+                            "description": "내용"
+                        }
+                        """))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Long contentId = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .get("id").asLong();
+
+        // when + then
+        mockMvc.perform(patch("/api/contents/" + contentId + "/lock")
+                        .header("Authorization", "Bearer " + otherUserToken))
+                .andExpect(status().isForbidden());
+    }
+
+    /**
+     * 잠금 상태 수정 제한
+     * - 작성자는 잠긴 콘텐츠를 수정할 수 없다
+     * - 관리자는 잠금 여부와 관계없이 수정 가능하다
+     */
+    @Test
+    @DisplayName("잠긴 콘텐츠는 작성자가 수정할 수 없다")
+    void update_fail_when_locked() throws Exception {
+        // given
+        mockMvc.perform(post("/api/auth/signup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new SignUpRequest("user1", "1234"))));
+
+        String userToken = getToken("user1", "1234");
+        String adminToken = getToken("admin", "admin1234");
+
+        var createResult = mockMvc.perform(post("/api/contents")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                        {
+                            "title": "원본 제목",
+                            "description": "원본 내용"
+                        }
+                        """))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Long contentId = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .get("id").asLong();
+
+        mockMvc.perform(patch("/api/contents/" + contentId + "/lock")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNoContent());
+
+        // when + then
+        mockMvc.perform(put("/api/contents/" + contentId)
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                        {
+                            "title": "수정 시도",
+                            "description": "수정 시도"
+                        }
+                        """))
+                .andExpect(status().isForbidden());
+    }
+
+
+    /**
      * 커서 기반 페이징 조회 테스트
      * - 최신순 정렬 기준으로 다음 페이지 조회 가능
      * - size + 1 조회를 통해 hasNext 판단 검증
