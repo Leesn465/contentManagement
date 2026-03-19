@@ -32,15 +32,7 @@ public class AuthController {
         return userService.signUp(request);
     }
 
-    @Operation(summary = "로그인", description = """
-    로그인 성공 시 JWT 토큰을 반환합니다.
-    
-    어드민 계정
-    
-    - 아이디: admin
-    
-    - 비밀번호: admin1234
-    """)
+    @Operation(summary = "로그인", description = "로그인 성공 시 JWT 토큰을 반환합니다.")
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);

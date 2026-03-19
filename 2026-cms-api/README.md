@@ -24,10 +24,7 @@ http://localhost:8080/h2-console
 
 (제공해준 yml로 구성하였습니다.)
 
-**3. 어드민 계정**
-- ADMIN
-  - username: admin
-  - password: admin1234
+
 
 ## 2. 로그인 방식
 
