@@ -7,6 +7,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.malgn.user.Role;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -21,6 +22,9 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class JwtTokenProvider {
+
+    @Value("${jwt.secret}")
+    private String secretKey;
 
     /**
      * JWT 토큰 생성
@@ -38,12 +42,12 @@ public class JwtTokenProvider {
                 .withJWTId(UUID.randomUUID().toString())
                 .withClaim("userId",userId)
                 .withClaim("role",role.name())
-                .sign(Algorithm.HMAC512(JwtConstants.SECRET_KEY));
+                .sign(Algorithm.HMAC512(secretKey));
 
 
     }
     public String extractUsername(String token) {
-        return JWT.require(Algorithm.HMAC512(JwtConstants.SECRET_KEY))
+        return JWT.require(Algorithm.HMAC512(secretKey))
                 .withIssuer(JwtConstants.ISSUER)
                 .build()
                 .verify(token)
@@ -57,7 +61,7 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            JWT.require(Algorithm.HMAC512(JwtConstants.SECRET_KEY))
+            JWT.require(Algorithm.HMAC512(secretKey))
                     .withIssuer(JwtConstants.ISSUER)
                     .build()
                     .verify(token);

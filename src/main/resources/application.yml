@@ -29,7 +29,9 @@ spring:
   threads:
     virtual:
       enabled: on
-
+## jwt 비밀키
+jwt:
+  secret: my-super-secret-key-for-cms-project-2026
 
 ## p6spy
 decorator:

@@ -24,6 +24,7 @@ create table contents
     last_modified_date timestamp,
     last_modified_by   varchar(50),
     author_id          bigint       not null,
+    locked             boolean      not null default false,
     constraint fk_contents_author
         foreign key (author_id) references users(id)
 );
