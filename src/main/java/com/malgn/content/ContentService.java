@@ -2,6 +2,7 @@ package com.malgn.content;
 
 import com.malgn.auth.PrincipalDetails;
 import com.malgn.content.DTO.*;
+import com.malgn.exception.BadRequestException;
 import com.malgn.exception.ForbiddenException;
 import com.malgn.exception.ResourceNotFoundException;
 import com.malgn.user.Role;
@@ -108,7 +109,7 @@ public class ContentService {
         int size = request.size();
 
         if (size < 1 || size > 100) {
-            throw new IllegalArgumentException("size는 1 이상 100 이하여야 합니다.");
+            throw new BadRequestException("size는 1 이상 100 이하여야 합니다.");
         }
 
         PageRequest pageable = PageRequest.of(0, size + 1);

@@ -17,7 +17,7 @@ create table contents
 (
     id                 bigint primary key auto_increment,
     title              varchar(100) not null,
-    description        varchar(255),
+    description        text,
     view_count         bigint       not null,
     created_date       timestamp    not null,
     created_by         varchar(50)  not null,
