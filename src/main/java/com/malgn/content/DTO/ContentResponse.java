@@ -13,7 +13,8 @@ public record ContentResponse(
         LocalDateTime createdDate,
         String createdBy,
         LocalDateTime lastModifiedDate,
-        String lastModifiedBy
+        String lastModifiedBy,
+        boolean locked
 ) {
     public static ContentResponse from(Content content) {
         return new ContentResponse(
@@ -24,7 +25,8 @@ public record ContentResponse(
                 content.getCreatedDate(),
                 content.getCreatedBy(),
                 content.getLastModifiedDate(),
-                content.getLastModifiedBy()
+                content.getLastModifiedBy(),
+                content.isLocked()
         );
     }
 }

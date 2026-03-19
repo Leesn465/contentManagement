@@ -67,6 +67,28 @@ public class ContentController {
     ) {
         contentService.delete(id, userDetails);
     }
+    @Operation(summary = "콘텐츠 잠금", description = "ADMIN 권한을 가진 사용자가 콘텐츠를 잠급니다. 잠금된 콘텐츠는 작성자가 수정할 수 없습니다.")
+    @SecurityRequirement(name = "bearerAuth")
+    @PatchMapping("/{id}/lock")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void lock(
+            @PathVariable Long id,
+            @AuthenticationPrincipal PrincipalDetails userDetails
+    ) {
+        contentService.lock(id, userDetails);
+    }
+
+    @Operation(summary = "콘텐츠 잠금 해제", description = "ADMIN이 콘텐츠 잠금을 해제합니다.")
+    @SecurityRequirement(name = "bearerAuth")
+    @PatchMapping("/{id}/unlock")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unlock(
+            @PathVariable Long id,
+            @AuthenticationPrincipal PrincipalDetails userDetails
+    ) {
+        contentService.unlock(id, userDetails);
+    }
+
 
     @Operation(summary = "콘텐츠 목록 조회 (Cursor 기반)")
     @GetMapping
@@ -81,6 +103,8 @@ public class ContentController {
 
         return contentService.getListWithCursor(request);
     }
+
+
 
 
 

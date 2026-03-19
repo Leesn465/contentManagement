@@ -56,7 +56,7 @@ public class ContentService {
         Content content = contentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("콘텐츠를 찾을 수 없습니다"));
 
-        validateCheck(content, userDetails);
+        validateUpdatePermission(content, userDetails);
 
         content.update(
                 request.title(),
@@ -76,7 +76,7 @@ public class ContentService {
         Content content = contentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("콘텐츠를 찾을 수 없습니다."));
 
-        validateCheck(content, userDetails);
+        validateOwnerOrAdmin(content, userDetails);
 
         contentRepository.delete(content);
     }
@@ -142,12 +142,48 @@ public class ContentService {
         );
     }
 
+    /**
+     * 콘텐츠 잠금
+     * - 관리자만 수행 가능
+     * - 잠금된 콘텐츠는 작성자가 수정할 수 없음
+     */
+    @Transactional
+    public void lock(Long id, PrincipalDetails userDetails) {
+        validateAdmin(userDetails);
+
+        Content content = contentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("콘텐츠를 찾을 수 없습니다."));
+
+        content.lock(userDetails.getUsername());
+    }
+
+    /**
+     * 콘텐츠 잠금 해제
+     * - 관리자만 수행 가능
+     * - 작성자가 다시 수정할 수 있도록 상태 변경
+     */
+    @Transactional
+    public void unlock(Long id, PrincipalDetails userDetails) {
+        validateAdmin(userDetails);
+
+        Content content = contentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("콘텐츠를 찾을 수 없습니다."));
+
+        content.unlock(userDetails.getUsername());
+    }
+
+    private void validateAdmin(PrincipalDetails userDetails) {
+        if (userDetails.getRole() != Role.ADMIN) {
+            throw new ForbiddenException("관리자만 수행할 수 있습니다.");
+        }
+    }
+
 
     /**
      * 권한 검증
      * - 작성자 본인 또는 ADMIN 권한만 허용
      */
-    private void validateCheck(Content content, PrincipalDetails userDetails) {
+    private void validateOwnerOrAdmin(Content content, PrincipalDetails userDetails) {
         boolean isOwner = content.getAuthor().getId().equals(userDetails.getId());
         boolean isAdmin = userDetails.getRole() == Role.ADMIN;
 
@@ -155,6 +191,27 @@ public class ContentService {
             throw new ForbiddenException("해당 콘텐츠에 대한 권한이 없습니다.");
         }
     }
+    /**
+     * 수정 권한 검증
+     * - 관리자: 항상 수정 가능
+     * - 작성자: 잠금 상태가 아닐 때만 수정 가능
+     * - 그 외 사용자: 수정 불가
+     */
+    private void validateUpdatePermission(Content content, PrincipalDetails userDetails) {
+        boolean isOwner = content.getAuthor().getId().equals(userDetails.getId());
+        boolean isAdmin = userDetails.getRole() == Role.ADMIN;
+
+        if (isAdmin) {
+            return;
+        }
+        if (content.isLocked()) {
+            throw new ForbiddenException("잠긴 게시글은 수정할 수 없습니다.");
+        }
+        if (!isOwner) {
+            throw new ForbiddenException("해당 콘텐츠에 대한 권한이 없습니다.");
+        }
+    }
+
 
 
 }
